@@ -1,0 +1,33 @@
+---
+title: "AirPassengers Data Dictionary"
+author: "ARYAN WALIA"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# AirPassengers Data Dictionary
+
+## Dataset Overview
+The **AirPassengers** dataset contains **monthly totals of international airline passengers from 1949 to 1960**. 
+It is a widely used dataset for **time series forecasting**.
+
+---
+
+## Variable Descriptions
+
+```{r, echo=FALSE}
+# Load necessary package
+library(knitr)
+
+# Create data dictionary as a dataframe
+data_dict <- data.frame(
+  "Variable Name" = c("Month", "Passengers"),
+  "Data Type" = c("Character (YYYY-MM)", "Integer"),
+  "Description" = c("The month and year of observation", 
+                    "The total number of international airline passengers in that month"),
+  "Units" = c("N/A", "Count"),
+  "Example Value" = c("1949-01", "112")
+)
+
+# Display as Markdown table
+kable(data_dict, format = "markdown")
