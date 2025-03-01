@@ -1,0 +1,80 @@
+---
+title: "HW 4 - AirPassengers Time Series Analysis"
+output: html_document
+author: "Aryan Walia"
+date: "2025-02-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(ggplot2)
+library(forecast)
+library(tseries)
+library(TTR)
+library(zoo)
+
+data <- read.csv("~/Downloads/AirPassengers.csv", header = TRUE, check.names = TRUE)
+data_ts <- ts(data$Passengers, start = c(1949, 1), frequency = 12)
+
+```{r setup, include=FALSE}
+```{r plot_time_series, echo=FALSE}
+autoplot(data_ts) + 
+  ggtitle("Air Passengers Time Series") + 
+  ylab("Number of Passengers") + 
+  xlab("Year") +
+  theme_minimal()
+
+decomposed <- decompose(data_ts, type = "multiplicative")
+autoplot(decomposed) + ggtitle("Decomposed Air Passengers Time Series")
+
+acf(data_ts, main = "Autocorrelation of AirPassengers Data")
+
+data_diff <- diff(log(data_ts))
+adf_result <- adf.test(data_diff)
+print(paste("ADF Test p-value:", adf_result$p.value))
+
+arima_model <- auto.arima(data_ts)
+summary(arima_model)
+
+ets_model <- ets(data_ts)
+summary(ets_model)
+
+arima_forecast <- forecast(arima_model, h = 12)
+ets_forecast <- forecast(ets_model, h = 12)
+
+autoplot(data_ts) +
+  autolayer(arima_forecast$mean, series = "ARIMA Forecast", PI = TRUE) +
+  autolayer(ets_forecast$mean, series = "ETS Forecast", PI = TRUE) +
+  ggtitle("Forecasts from ARIMA and ETS") +
+  ylab("Number of Passengers") +
+  xlab("Year") +
+  theme_minimal()
+
+arima_accuracy <- accuracy(arima_forecast)
+ets_accuracy <- accuracy(ets_forecast)
+
+# Print accuracy tables
+print(arima_accuracy)
+print(ets_accuracy)
+
+
+# Extract RMSE
+arima_rmse <- arima_accuracy[nrow(arima_accuracy), "RMSE"]
+ets_rmse <- ets_accuracy[nrow(ets_accuracy), "RMSE"]
+
+comparison <- data.frame(
+  Model = c("ARIMA", "ETS"),
+  RMSE = c(arima_rmse, ets_rmse)
+)
+
+print(comparison)
+
+
+best_model <- comparison[which.min(comparison$RMSE), ]
+print(paste("The best model based on RMSE is:", best_model$Model))
+
+
+
+
+
+
