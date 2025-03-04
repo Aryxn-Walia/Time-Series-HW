@@ -1,0 +1,153 @@
+---
+title: "Forecasting US Arrivals to Australia"
+author: "Aryan Walia"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing Data
+
+```{r load-packages}
+library(fpp2)
+
+```
+
+```{r load-data}
+data("arrivals")
+ts_data <- arrivals[, "US"]  # Extract US arrivals
+ts_data <- ts(ts_data, start = c(1981, 1), frequency = 12)
+```
+
+## Time Series Plot
+
+```{r plot-time-series}
+ggplot2::autoplot(ts_data) +
+  ggtitle("US Arrivals to Australia") +
+  xlab("Year") +
+  ylab("Number of Arrivals")
+```
+
+**Observations:**
+- There appears to be an increasing trend over time.
+- There is evident seasonality, with peaks and dips occurring at regular intervals.
+- Some fluctuations are more extreme in certain periods.
+
+## Summary Statistics
+
+```{r summary-stats}
+summary(ts_data)
+boxplot(ts_data, main="Boxplot of US Arrivals to Australia", ylab="Arrivals")
+```
+
+**Observations:**
+- The mean and median are relatively close, indicating a somewhat symmetric distribution.
+- There are potential outliers in the upper range.
+- Seasonality likely contributes to the variations in values.
+
+## Time Series Decomposition
+
+```{r decomposition}
+decomp <- decompose(ts_data, type = "multiplicative")
+plot(decomp)
+```
+
+**Observations:**
+- The series exhibits a clear seasonal pattern.
+- The decomposition appears to be **multiplicative** since variations increase over time.
+- Seasonality indices reveal months with high and low arrivals.
+
+```{r seasonal-indices}
+decomp$seasonal[1:12]  # Extract seasonal indices
+```
+
+- The highest arrivals occur in **December** (holiday season).
+- The lowest arrivals occur in **February**, likely due to fewer vacations.
+
+## Seasonality-Adjusted Plot
+
+```{r seasonality-adjusted}
+adjusted_ts <- ts_data / decomp$seasonal
+autoplot(ts_data, series="Actual") +
+  autolayer(adjusted_ts, series="Seasonally Adjusted", color='red') +
+  ggtitle("Seasonally Adjusted vs. Actual US Arrivals")
+```
+
+**Observations:**
+- The adjusted time series smooths out seasonal fluctuations.
+
+## Naïve Method Forecast
+
+```{r naive-forecast}
+naive_model <- naive(ts_data)
+plot(naive_model)
+```
+
+## Residual Analysis
+
+```{r residual-analysis}
+residuals <- residuals(naive_model)
+
+# Plot Residuals
+autoplot(residuals) + ggtitle("Residuals Plot")
+
+# Histogram
+hist(residuals, main="Histogram of Residuals", xlab="Residuals", col="lightblue")
+
+# Fitted vs Residuals
+plot(fitted(naive_model), residuals, main="Fitted vs Residuals", xlab="Fitted", ylab="Residuals")
+abline(h=0, col="red")
+
+# Actual vs Residuals
+plot(ts_data, residuals, main="Actual vs Residuals", xlab="Actual", ylab="Residuals")
+abline(h=0, col="red")
+
+# ACF Plot
+Acf(residuals)
+```
+
+**Observations:**
+- Residuals appear to have patterns, suggesting some autocorrelation.
+- The histogram suggests normality but with slight skewness.
+- The ACF plot indicates potential correlation in residuals.
+
+## Forecasting Accuracy
+
+```{r accuracy-metrics}
+accuracy(naive_model)
+```
+## Final Forecast
+```{r}
+naive_forecast <- naive(arrivals[,4])
+plot(naive_forecast)
+
+plot(residuals(naive_forecast))
+
+hist(residuals(naive_forecast))
+
+plot(fitted(naive_forecast), residuals(naive_forecast))
+
+plot(naive_forecast$x, residuals(naive_forecast))
+
+Acf(residuals(naive_forecast), main="ACF Plot of Residuals")
+
+
+
+### **Summary, Accuracy, and Prediction**
+
+summary(naive_forecast)
+
+accuracy(naive_forecast)
+
+forecast(naive_forecast, h=4)
+
+plot(forecast(naive_forecast, h=4))
+
+
+##### The model demonstrates low accuracy. The projected time series value for the next year is approximately 106.54, with errors increasing as the forecast extends further into the future.
+```
+
+```
