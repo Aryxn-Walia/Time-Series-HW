@@ -1,0 +1,57 @@
+---
+title: "hw5"
+author: "Aryan walia"
+output: html_document
+date: "2025-04-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(forecast)
+library(ggplot2)
+
+# Import the dataset
+data <- read.csv("AirPassengers.csv")
+
+# Convert to time series
+ts_data <- ts(data$Passengers, start = c(1949, 1), frequency = 12)
+```
+
+```{r}
+autoplot(ts_data) + ggtitle("Monthly Air Passengers") + ylab("Passengers")
+```
+```{r}
+model <- auto.arima(ts_data)
+summary(model)
+checkresiduals(model)
+```
+### 1. Explaining the Output
+
+The model selected by `auto.arima()` is **ARIMA(2,1,1)(0,1,0)[12]**, which means:
+
+- **p = 2**: Two autoregressive terms (AR).
+- **d = 1**: First-order differencing to remove trend.
+- **q = 1**: One moving average term (MA).
+- **Seasonal (0,1,0)[12]**: One seasonal differencing applied, no seasonal AR/MA terms.
+
+The coefficients section shows the estimated values for ar1, ar2, and ma1, with standard errors.  
+The model fit is measured by:
+
+- **AIC = 1017.85**, **BIC = 1029.35**: Lower values indicate a better model.
+- **sigma² = 132.3**: The variance of the residuals; lower means better fit.
+
+These values suggest the model fits the data well and captures both trend and seasonality.
+
+```{r}
+forecasted <- forecast(model, h = 5)
+autoplot(forecasted) + ggtitle("Forecast for Next 5 Periods") + ylab("Passengers")
+```
+```{r}
+accuracy(model)
+```
+
+
+
